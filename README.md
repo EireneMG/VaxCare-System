@@ -40,20 +40,20 @@ A vaccination management system built with Node.js and MySQL using XAMPP.
 - Track dose numbers
 - Add remarks for each vaccination
 - Record administering staff
-- Track modification history
+- Automatic stock deduction when vaccines are administered
 
 ### User Management
 - User authentication system
 - Role-based access (Admin/Worker)
 - Activity logging
-- Secure password handling
+- Secure password handling with bcrypt
 
 ## Technical Stack
 
 - **Frontend**: HTML, CSS (Bootstrap 5), JavaScript
 - **Backend**: Node.js with Express
 - **Database**: MySQL
-- **Authentication**: Custom token-based authentication
+- **Authentication**: Simple user ID-based authentication
 
 ## Database Schema
 
