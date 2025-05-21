@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaxCare - Vaccination Management System</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d6efd'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="loginForm" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Login to VaxCare</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="loginEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="loginEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="loginPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>Don't have an account? <a href="#" id="showRegister">Register here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="container mt-5" style="display: none;">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Register for VaxCare</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="registerName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="registerName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="registerEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="registerPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerRole" class="form-label">Role</label>
+                                <select class="form-control" id="registerRole" required>
+                                    <option value="worker">Worker</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Register</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>Already have an account? <a href="#" id="showLogin">Login here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">VaxCare</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('patients')">Patients</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('vaccines')">Vaccines</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('queue')">Queue</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('vaccination-records')">Vaccination Records</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="showSection('activity-logs')">Activity Logs</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <button class="btn btn-outline-light" id="logoutButton">Logout</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <!-- Patients Section -->
+            <div id="patients" class="section">
+                <h2>Patients</h2>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="patientSearch" placeholder="Search patients...">
+                </div>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                    Add New Patient
+                </button>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="patientsTable">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Birth Date</th>
+                                <th>Gender</th>
+                                <th>Contact Number</th>
+                                <th>Address</th>
+                                <th>Registration Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vaccines Section -->
+            <div id="vaccines" class="section" style="display: none;">
+                <h2>Vaccines</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVaccineModal">
+                    Add New Vaccine
+                </button>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="vaccinesTable">
+                        <thead>
+                            <tr>
+                                <th>Vaccine Name</th>
+                                <th>Manufacturer</th>
+                                <th>Stock Quantity</th>
+                                <th>Expiry Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Queue Section -->
+            <div id="queue" class="section" style="display: none;">
+                <h2>Queue</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
+                    Add to Queue
+                </button>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="queueTable">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vaccination Records Section -->
+            <div id="vaccination-records" class="section" style="display: none;">
+                <h2>Vaccination Records</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addVaccinationRecordModal">
+                    Add New Record
+                </button>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="vaccinationRecordsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Vaccine Name</th>
+                                <th>Dose Number</th>
+                                <th>Date Administered</th>
+                                <th>Remarks</th>
+                                <th>Administered By</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Activity Logs Section -->
+            <div id="activity-logs" class="section" style="display: none;">
+                <h2>Activity Logs</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="activityLogsTable">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Patient Modal -->
+    <div class="modal fade" id="addPatientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Patient</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPatientForm">
+                        <div class="mb-3">
+                            <label for="patientName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="patientName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="patientBirthDate" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="patientBirthDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="patientGender" class="form-label">Gender</label>
+                            <select class="form-control" id="patientGender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="patientContact" class="form-label">Contact Number</label>
+                            <input type="tel" class="form-control" id="patientContact" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="patientAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="patientAddress" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Patient</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Vaccine Modal -->
+    <div class="modal fade" id="addVaccineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Vaccine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addVaccineForm">
+                        <div class="mb-3">
+                            <label for="vaccineName" class="form-label">Vaccine Name</label>
+                            <input type="text" class="form-control" id="vaccineName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vaccineManufacturer" class="form-label">Manufacturer</label>
+                            <input type="text" class="form-control" id="vaccineManufacturer" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vaccineStock" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="vaccineStock" required min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="vaccineExpiry" class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="vaccineExpiry" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Vaccine</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Queue Modal -->
+    <div class="modal fade" id="addToQueueModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Patient to Queue</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addToQueueForm">
+                        <div class="mb-3">
+                            <label for="queuePatient" class="form-label">Select Patient</label>
+                            <select class="form-control" id="queuePatient" required>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add to Queue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Vaccination Record Modal -->
+    <div class="modal fade" id="addVaccinationRecordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Vaccination Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addVaccinationRecordForm">
+                        <div class="mb-3">
+                            <label for="recordPatient" class="form-label">Select Patient</label>
+                            <select class="form-control" id="recordPatient" name="patient_id" required>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="recordVaccine" class="form-label">Select Vaccine</label>
+                            <select class="form-control" id="recordVaccine" name="vaccine_id" required>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="recordDose" class="form-label">Dose Number</label>
+                            <input type="number" class="form-control" id="recordDose" name="dose_number" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="recordRemarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="recordRemarks" name="remarks"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Record</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record History Modal -->
+    <div class="modal fade" id="recordHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Vaccination Record History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- History items will be inserted here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
