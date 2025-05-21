@@ -39,12 +39,7 @@ A vaccination management system built with Node.js and MySQL using XAMPP.
      - Port: 3306
      - Database: vaxcare_db
 
-7. Insert dummy data:
-   ```bash
-   node dummyData.js
-   ```
-
-8. Start the server:
+7. Start the server:
    ```bash
    node server.js
    ```
