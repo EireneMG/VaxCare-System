@@ -281,10 +281,16 @@ app.post('/api/vaccination-records', authenticateUser, async (req, res) => {
         [patient_id, vaccine_id, req.user.user_id, dose_number, remarks]
       );
       
+      // Decrement vaccine stock
+      await query(
+        'UPDATE vaccines SET stock_quantity = stock_quantity - ? WHERE vaccine_id = ?',
+        [dose_number, vaccine_id]
+      );
+      
       // Log activity
       await query(
         'INSERT INTO activity_logs (user_id, action) VALUES (?, ?)',
-        [req.user.user_id, `Added vaccination record for patient ID: ${patient_id}`]
+        [req.user.user_id, `Added vaccination record for patient ID: ${patient_id} and vaccine ID: ${vaccine_id}`]
       );
       
       await query('COMMIT');
@@ -301,103 +307,6 @@ app.post('/api/vaccination-records', authenticateUser, async (req, res) => {
   }
 });
 
-// Get vaccination record history
-app.get('/api/vaccination-records/:id/history', authenticateUser, async (req, res) => {
-  try {
-    const history = await query(`
-      SELECT h.*, u.full_name as modified_by_name
-      FROM vaccination_record_history h
-      JOIN users u ON h.modified_by = u.user_id
-      WHERE h.record_id = ?
-      ORDER BY h.modified_at DESC
-    `, [req.params.id]);
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update vaccination record
-app.put('/api/vaccination-records/:id', authenticateUser, async (req, res) => {
-    try {
-        const { dose_number, remarks } = req.body;
-        
-        // Get current record
-        const [currentRecord] = await query(
-            'SELECT * FROM vaccination_records WHERE record_id = ?',
-            [req.params.id]
-        );
-        
-        if (!currentRecord) {
-            return res.status(404).json({ error: 'Record not found' });
-        }
-        
-        // Start transaction
-        await query('START TRANSACTION');
-        
-        try {
-            // Update record
-            await query(
-                'UPDATE vaccination_records SET dose_number = ?, remarks = ?, last_modified = CURRENT_TIMESTAMP WHERE record_id = ?',
-                [dose_number, remarks, req.params.id]
-            );
-            
-            // Add to history
-            await query(
-                'INSERT INTO vaccination_record_history (record_id, modified_by, old_dose_number, new_dose_number, old_remarks, new_remarks) VALUES (?, ?, ?, ?, ?, ?)',
-                [req.params.id, req.user.user_id, currentRecord.dose_number, dose_number, currentRecord.remarks, remarks]
-            );
-            
-            // Log activity
-            await query(
-                'INSERT INTO activity_logs (user_id, action) VALUES (?, ?)',
-                [req.user.user_id, `Updated vaccination record ID: ${req.params.id}`]
-            );
-            
-            await query('COMMIT');
-            
-            // Get updated record with joins
-            const [updatedRecord] = await query(`
-                SELECT vr.*, p.full_name as patient_name, v.vaccine_name, u.full_name as administered_by_name
-                FROM vaccination_records vr
-                JOIN patients p ON vr.patient_id = p.patient_id
-                JOIN vaccines v ON vr.vaccine_id = v.vaccine_id
-                JOIN users u ON vr.administered_by = u.user_id
-                WHERE vr.record_id = ?
-            `, [req.params.id]);
-            
-            res.json(updatedRecord);
-        } catch (err) {
-            await query('ROLLBACK');
-            throw err;
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get single vaccination record
-app.get('/api/vaccination-records/:id', authenticateUser, async (req, res) => {
-    try {
-        const [record] = await query(`
-            SELECT vr.*, p.full_name as patient_name, v.vaccine_name, u.full_name as administered_by_name
-            FROM vaccination_records vr
-            JOIN patients p ON vr.patient_id = p.patient_id
-            JOIN vaccines v ON vr.vaccine_id = v.vaccine_id
-            JOIN users u ON vr.administered_by = u.user_id
-            WHERE vr.record_id = ?
-        `, [req.params.id]);
-        
-        if (!record) {
-            return res.status(404).json({ error: 'Vaccination record not found' });
-        }
-        
-        res.json(record);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // Queue Routes
 app.get('/api/queue', authenticateUser, async (req, res) => {
   try {
@@ -406,7 +315,7 @@ app.get('/api/queue', authenticateUser, async (req, res) => {
       FROM queue q 
       JOIN patients p ON q.patient_id = p.patient_id
       WHERE q.status != 'Completed'
-      ORDER BY q.created_at ASC
+      ORDER BY FIELD(q.priority, 'Emergency', 'Normal'), q.created_at ASC
     `);
     res.json(queue);
   } catch (err) {
@@ -417,6 +326,7 @@ app.get('/api/queue', authenticateUser, async (req, res) => {
 app.post('/api/queue', authenticateUser, async (req, res) => {
   try {
     const { patient_id } = req.body;
+    const priority = req.body.priority || 'Normal'; // Default to Normal if not provided
     
     // Check if patient is already in queue
     const [existingQueue] = await query(
@@ -430,14 +340,14 @@ app.post('/api/queue', authenticateUser, async (req, res) => {
     
     const created_at = new Date().toISOString();
     const result = await query(
-      'INSERT INTO queue (patient_id, status, created_at) VALUES (?, "Waiting", ?)',
-      [patient_id, created_at]
+      'INSERT INTO queue (patient_id, priority, status, created_at) VALUES (?, ?, "Waiting", ?)',
+      [patient_id, priority, created_at]
     );
     
     // Log activity
     await query(
       'INSERT INTO activity_logs (user_id, action) VALUES (?, ?)',
-      [req.user.user_id, `Added patient ID: ${patient_id} to queue`]
+      [req.user.user_id, `Added patient ID: ${patient_id} with priority ${priority} to queue`]
     );
     
     res.json({ 
@@ -452,15 +362,25 @@ app.post('/api/queue', authenticateUser, async (req, res) => {
 app.put('/api/queue/:id', authenticateUser, async (req, res) => {
   try {
     const { status } = req.body;
-    await query(
-      'UPDATE queue SET status = ? WHERE queue_id = ?',
-      [status, req.params.id]
-    );
+    const priority = req.body.priority; // Allow updating priority
+    
+    let sql = 'UPDATE queue SET status = ?';
+    const params = [status];
+    
+    if (priority) {
+      sql += ', priority = ?';
+      params.push(priority);
+    }
+    
+    sql += ' WHERE queue_id = ?';
+    params.push(req.params.id);
+
+    await query(sql, params);
     
     // Log activity
     await query(
       'INSERT INTO activity_logs (user_id, action) VALUES (?, ?)',
-      [req.user.user_id, `Updated queue ID: ${req.params.id} status to ${status}`]
+      [req.user.user_id, `Updated queue ID: ${req.params.id} status to ${status}${priority ? ' and priority to ' + priority : ''}`]
     );
     
     res.json({ message: 'Queue updated successfully' });

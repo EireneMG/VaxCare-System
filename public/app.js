@@ -307,7 +307,8 @@ async function loadQueue() {
 async function addToQueue() {
     const form = document.getElementById('addToQueueForm');
     const data = {
-        patient_id: document.getElementById('queuePatient').value
+        patient_id: document.getElementById('queuePatient').value,
+        priority: document.getElementById('queuePriority').value
     };
     
     try {
@@ -476,6 +477,7 @@ function updateQueueTable() {
     tbody.innerHTML = queue.map(item => `
         <tr>
             <td>${item.patient_name}</td>
+            <td>${item.priority}</td>
             <td>${item.status}</td>
             <td>${formatDate(item.created_at)}</td>
             <td>
@@ -503,10 +505,6 @@ function updateVaccinationRecordsTable() {
             <td>${record.remarks || ''}</td>
             <td>${record.administered_by_name}</td>
             <td>${formatDate(record.last_modified)}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="editVaccinationRecord(${record.record_id})">Edit</button>
-                <button class="btn btn-sm btn-info" onclick="viewRecordHistory(${record.record_id})">History</button>
-            </td>
         </tr>
     `).join('');
 }
@@ -966,6 +964,7 @@ async function updateQueueStatus(queueId, status) {
         
         if (response.ok) {
             await loadQueue();
+            await populateSelectOptions();
             alert('Queue status updated successfully');
         } else {
             const error = await response.json();
@@ -1074,6 +1073,7 @@ async function updateVaccinationRecord(id) {
             };
             
             // Update the table with the new data
+            console.log('Calling updateVaccinationRecordsTable with array state:', [...vaccinationRecords]); // Debug log
             updateVaccinationRecordsTable();
             alert('Record updated successfully');
         } else {

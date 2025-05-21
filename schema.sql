@@ -47,34 +47,21 @@ CREATE TABLE vaccination_records (
     FOREIGN KEY (administered_by) REFERENCES users(user_id)
 );
 
--- Vaccination Record History Table
-CREATE TABLE vaccination_record_history (
-    history_id INT PRIMARY KEY AUTO_INCREMENT,
-    record_id INT NOT NULL,
-    modified_by INT NOT NULL,
-    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_dose_number INT,
-    new_dose_number INT,
-    old_remarks TEXT,
-    new_remarks TEXT,
-    FOREIGN KEY (record_id) REFERENCES vaccination_records(record_id),
-    FOREIGN KEY (modified_by) REFERENCES users(user_id)
-);
-
 -- Queue Table
 CREATE TABLE queue (
     queue_id INT PRIMARY KEY AUTO_INCREMENT,
     patient_id INT NOT NULL,
+    priority ENUM('Normal', 'Emergency') NOT NULL DEFAULT 'Normal',
     status ENUM('Waiting', 'In Progress', 'Completed') NOT NULL DEFAULT 'Waiting',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
 );
 
 -- Activity Logs Table
-CREATE TABLE activity_logs (
-    log_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    action TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS activity_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(255) NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 ); 

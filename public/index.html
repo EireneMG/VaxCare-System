@@ -173,6 +173,7 @@
                         <thead>
                             <tr>
                                 <th>Patient Name</th>
+                                <th data-sort="priority">Priority <i class="bi bi-arrow-down-up"></i></th>
                                 <th>Status</th>
                                 <th>Created At</th>
                                 <th>Actions</th>
@@ -199,6 +200,7 @@
                                 <th>Date Administered</th>
                                 <th>Remarks</th>
                                 <th>Administered By</th>
+                                <th>Last Modified</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -315,6 +317,13 @@
                                 <!-- Will be populated dynamically -->
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="queuePriority" class="form-label">Priority</label>
+                            <select class="form-control" id="queuePriority" name="priority" required>
+                                <option value="Normal">Normal</option>
+                                <option value="Emergency">Emergency</option>
+                            </select>
+                        </div>
                         <button type="submit" class="btn btn-primary">Add to Queue</button>
                     </form>
                 </div>
@@ -354,24 +363,6 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Add Record</button>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Record History Modal -->
-    <div class="modal fade" id="recordHistoryModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Vaccination Record History</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- History items will be inserted here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
